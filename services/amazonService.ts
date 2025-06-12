@@ -123,6 +123,7 @@ private async fetchOrdersFromDate(fromDate: Date): Promise<any[]> {
       const params = new URLSearchParams({
         marketplaceIds: this.marketplaceId,
         includedData: 'summaries,attributes,issues,offers,fulfillmentAvailability,procurement',
+        limit: '20',
       });
       if (nextToken) {
         params.append('nextToken', nextToken);

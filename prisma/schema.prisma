@@ -1,0 +1,190 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  active
+  inactive
+  suspended
+}
+
+model User {
+  id           Int         @id @unique @default(autoincrement())
+  name         String?
+  email        String      @unique
+  password     String
+  otp          String?
+  otpExpiresAt DateTime?
+  verified     Boolean     @default(false)
+  role         String      @default("user")
+  status       UserStatus? @default(active)
+  image        String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  cartItems    CartItem[]
+  orders       Order[]
+  reviews      Review[]
+  notifications Notification[]
+}
+
+model Product {
+  id          Int         @id @default(autoincrement())
+  name        String
+  price       Float
+  stock       Int
+  status      Boolean     @default(true)
+  images      String[]
+  description String?
+  categoryId  Int
+  category    Category    @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  reviews     Review[]
+
+  @@index([categoryId])
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int      @db.SmallInt
+  comment   String?  @db.Text
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([productId])
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id])
+  totalAmount Float
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  items       OrderItem[]
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+// Notification types for the ecommerce platform
+enum NotificationType {
+  // Order related
+  ORDER_PLACED
+  ORDER_CONFIRMED
+  ORDER_PROCESSING
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  
+  // Product related
+  PRODUCT_LOW_STOCK
+  PRODUCT_BACK_IN_STOCK
+  PRODUCT_PRICE_DROP
+  
+  // Account related
+  ACCOUNT_VERIFIED
+  
+  // Payment related
+  PAYMENT_RECEIVED
+  PAYMENT_FAILED
+  REFUND_INITIATED
+  REFUND_COMPLETED
+}
+
+// Notification model - system notifications for users
+model Notification {
+  id        Int             @id @default(autoincrement())
+  userId    Int
+  user      User            @relation(fields: [userId], references: [id])
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean         @default(false)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+}
+
+//Contact us form
+enum ContactStatus {
+  NEW
+  REVIEWED
+  CONTACTED
+  SOLVED
+}
+
+model ContactMessage {
+  id        Int           @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    ContactStatus @default(NEW)
+  createdAt DateTime      @default(now())
+}

@@ -20,61 +20,38 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 5000;
 
-// Apply middlewares
+
 app.use(cookieParser());
 
-// Updated CORS configuration for domain setup
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://acme.logicmatrix.tech", // Your frontend domain
+  "https://acme.logicmatrix.tech",
   process.env.CLIENT_URL || "http://152.42.179.250:3000"
 ];
+
+
 
 app.use(
   cors({
     origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      // Allow requests with no origin (mobile apps, curl, postman)
       if (!origin) return callback(null, true);
-      
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log(`CORS blocked origin: ${origin}`);
-        callback(new Error(`Not allowed by CORS: ${origin}`));
-      }
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      console.log(`CORS blocked origin: ${origin}`);
+      callback(new Error(`Not allowed by CORS: ${origin}`));
     },
-    credentials: true, // Essential for cookies
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: [
-      'Content-Type', 
-      'Authorization', 
-      'Cookie', 
-      'X-Requested-With', 
-      'Accept', 
+      'Content-Type',
+      'Authorization',
+      'Cookie',
+      'X-Requested-With',
+      'Accept',
       'Origin'
     ],
     exposedHeaders: ['Set-Cookie']
   })
 );
-
-// Add explicit CORS headers middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With, Accept, Origin');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(204).send();
-    return;
-  }
-  
-  next();
-});
 
 app.use(express.json());
 

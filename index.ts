@@ -1,7 +1,6 @@
 import express, { Express, Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-import cors from "cors";
 
 import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes";
@@ -18,38 +17,13 @@ import amazonRoutes from "./routes/amazonRoutes";
 dotenv.config();
 
 const app: Express = express();
-const port = process.env.PORT || 5000;
-
-
 app.use(cookieParser());
-
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://acme.logicmatrix.tech",
-  process.env.CLIENT_URL || "http://152.42.179.250:3000"
-];
-
-
-
+const port = process.env.PORT;
+const cors = require("cors");
 app.use(
   cors({
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      console.log(`CORS blocked origin: ${origin}`);
-      callback(new Error(`Not allowed by CORS: ${origin}`));
-    },
+    origin: process.env.CLIENT_URL,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'Cookie',
-      'X-Requested-With',
-      'Accept',
-      'Origin'
-    ],
-    exposedHeaders: ['Set-Cookie']
   })
 );
 

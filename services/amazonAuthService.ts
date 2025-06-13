@@ -46,7 +46,7 @@ export class AmazonAuthService {
       if (!this.accessToken) {
         throw new Error('Access token is null');
       }
-
+//Test
       return this.accessToken;
     } catch (error: any) {
       console.error('Failed to fetch Amazon access token:', error.response?.data || error.message);
